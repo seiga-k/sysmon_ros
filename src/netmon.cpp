@@ -62,10 +62,14 @@ public:
 	
 	void run()
 	{
+		ros::Time last_time = ros::Time::now();
 		ros::Rate rate(hz);
 		while (ros::ok() && do_loop) {
 			ros::spinOnce();
 			
+			ros::Time cur_time = ros::Time::now();
+			ros::Duration diff = cur_time - last_time;
+			double diff_sec = diff.toSec();
 			std::string str;
 			int32_t line(0);
 			while (Util::readSingleLine(proc_name, str, line++)) {
@@ -77,8 +81,8 @@ public:
 					double tx_err_rate(0.0);
 					double rx_err_rate(0.0);
 					sysmon_ros::netif msg;
-					tx_bps = hz * (stat.tx_total - if_stats[ifname].tx_total) * 8;
-					rx_bps = hz * (stat.rx_total - if_stats[ifname].rx_total) * 8;
+					tx_bps = (double)(stat.tx_total - if_stats[ifname].tx_total) * 8.0 / diff_sec;
+					rx_bps = (double)(stat.rx_total - if_stats[ifname].rx_total) * 8.0 / diff_sec;
 					if(stat.tx_pack_total > if_stats[ifname].tx_pack_total){
 						tx_err_rate = (double)(stat.tx_err - if_stats[ifname].tx_err) / (double)(stat.tx_pack_total - if_stats[ifname].tx_pack_total) * 100.0;
 					}
@@ -91,11 +95,12 @@ public:
 					msg.tx_bps = tx_bps;
 					msg.tx_error_rate = tx_err_rate;
 					pub_netifs[ifname].publish(msg);
-					ROS_DEBUG("%s rate : %d, %d, %3.2f, %3.2f", ifname.c_str(), tx_bps, rx_bps, tx_err_rate, rx_err_rate);
+					ROS_DEBUG("%1.3lf %s\t\trate : %10d, %10d, %3.2f, %3.2f", diff_sec, ifname.c_str(), tx_bps, rx_bps, tx_err_rate, rx_err_rate);
 					
 					if_stats[ifname] = stat;
 				}
 			}
+			last_time = cur_time;
 			
 			rate.sleep();
 		}
