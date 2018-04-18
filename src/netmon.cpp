@@ -10,6 +10,13 @@
 #include <vector>
 #include <numeric>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
+#include <linux/if_link.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/xpressive/xpressive.hpp>
@@ -32,6 +39,11 @@ public:
 	do_loop(true)
 	{
 		struct stat st_tmp;
+		struct ifaddrs *ifaddr, *ifa;
+		int err_num;
+		if(getifaddrs(&ifaddr) == -1){
+			return;
+		}
 
 		if (stat(proc_name.c_str(), &st_tmp) == 0) {
 			std::string str;
@@ -52,7 +64,45 @@ public:
 			ROS_WARN("Failed to start Network monitor. No proc file.");
 			return;
 		}
-		
+
+		int n;
+		for (n = 0, ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next, n++) {
+			if (ifa->ifa_addr == NULL)
+				continue;
+
+			int family = ifa->ifa_addr->sa_family;
+
+			/* For an AF_INET* interface address, display the address */
+
+			if (family == AF_INET) {
+				char host[NI_MAXHOST];
+				err_num = getnameinfo(	ifa->ifa_addr,
+										sizeof (struct sockaddr_in),
+										host,
+										NI_MAXHOST,
+										NULL,
+										0,
+										NI_NUMERICHOST);
+				if (err_num != 0) {
+					ROS_WARN("getnameinfo() failed: %s", gai_strerror(err_num));
+					return;
+				}
+				std::string ifname(ifa->ifa_name);
+				std::string ip(host);
+				std::cout << ifname << " IP : " << ip << std::endl;
+
+			} else if (family == AF_PACKET && ifa->ifa_data != NULL) {
+				struct rtnl_link_stats *stats;
+				stats = (rtnl_link_stats *)ifa->ifa_data;
+
+				printf("\t\ttx_packets = %10u; rx_packets = %10u\n"
+					"\t\ttx_bytes   = %10u; rx_bytes   = %10u\n",
+					stats->tx_packets, stats->rx_packets,
+					stats->tx_bytes, stats->rx_bytes);
+			}
+		}
+
+		freeifaddrs(ifaddr);
 	}
 	
 	~Netmon()
@@ -149,6 +199,7 @@ private:
 	ros::NodeHandle nh;
 	std::map<std::string, ros::Publisher> pub_netifs;
 	std::map<std::string, Netmon::if_stat> if_stats;
+	std::map<std::string, std::string> ips;
 	int32_t if_cnt;	
 	std::string proc_name;
 	double hz;
