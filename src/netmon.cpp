@@ -18,11 +18,6 @@
 #include <ifaddrs.h>
 #include <linux/if_link.h>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/xpressive/xpressive.hpp>
-#include <boost/phoenix.hpp>
-#include <boost/spirit/include/qi.hpp>
-
 #include "util.h"
 
 namespace qi = boost::spirit::qi;
@@ -33,8 +28,6 @@ class Netmon{
 public:
 	Netmon() :
 	nh("~"),
-	if_cnt(0),
-	proc_name("/proc/net/dev"),
 	hz(1.0),
 	do_loop(true)
 	{
@@ -55,7 +48,7 @@ public:
 			if (family == AF_INET) {
 				char host[NI_MAXHOST];
 				err_num = getnameinfo(	ifa_->ifa_addr,
-										sizeof (struct sockaddr_in),
+										sizeof (sockaddr_in),
 										host,
 										NI_MAXHOST,
 										NULL,
@@ -162,11 +155,9 @@ public:
 private:	
 	ros::NodeHandle nh;
 	std::map<std::string, ros::Publisher> pub_netifs;
-	std::map<std::string, struct rtnl_link_stats> if_stats;
+	std::map<std::string, rtnl_link_stats> if_stats;
 	std::map<std::string, std::vector<std::string>> ips;
-	struct ifaddrs *ifaddr;
-	int32_t if_cnt;	
-	std::string proc_name;
+	ifaddrs *ifaddr;
 	double hz;
 	bool do_loop;
 };
