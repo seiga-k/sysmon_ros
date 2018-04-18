@@ -32,6 +32,8 @@ public:
 			return;
 		}
 
+		nh.getParam("hz", hz);
+
 		ifaddrs *ifa_;
 		for (ifa_ = ifaddr; ifa_ != NULL; ifa_ = ifa_->ifa_next) {
 			if (ifa_->ifa_addr == NULL) {
