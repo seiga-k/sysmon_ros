@@ -55,7 +55,7 @@ public:
 					return;
 				}
 				std::string ip(host);
-				std::cout << ifname << " IP : " << ip << std::endl;
+				//std::cout << ifname << " IP : " << ip << std::endl;
 				auto it = ips.find(ifname);
 				if (it == ips.end()) {
 					std::vector<std::string> ip_;
@@ -82,6 +82,7 @@ public:
 				if_stats[ifname] = *stats;
 			}
 		}
+		ROS_INFO("Start netmon node");
 	}
 
 	~Netmon()
