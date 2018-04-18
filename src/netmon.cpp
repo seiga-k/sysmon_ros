@@ -41,6 +41,7 @@ public:
 				if_stat stat;
 				if(parse(str, ifname, stat)){
 					if_stats.insert(std::make_pair(ifname, stat));
+					pub_netifs.insert(std::make_pair(ifname, nh.advertise<sysmon_ros::netif>(ifname, 1) ) );
 					if_cnt++;
 				}
 			}
@@ -75,6 +76,7 @@ public:
 					int32_t rx_bps(0.0);
 					double tx_err_rate(0.0);
 					double rx_err_rate(0.0);
+					sysmon_ros::netif msg;
 					tx_bps = hz * (stat.tx_total - if_stats[ifname].tx_total) * 8;
 					rx_bps = hz * (stat.rx_total - if_stats[ifname].rx_total) * 8;
 					if(stat.tx_pack_total > if_stats[ifname].tx_pack_total){
@@ -83,6 +85,12 @@ public:
 					if(stat.rx_pack_total > if_stats[ifname].rx_pack_total){
 						rx_err_rate = (double)(stat.rx_err - if_stats[ifname].rx_err) / (double)(stat.rx_pack_total - if_stats[ifname].rx_pack_total) * 100.0;
 					}
+					msg.if_name = ifname;
+					msg.rx_bps = rx_bps;
+					msg.rx_error_rate = rx_err_rate;
+					msg.tx_bps = tx_bps;
+					msg.tx_error_rate = tx_err_rate;
+					pub_netifs[ifname].publish(msg);
 					ROS_DEBUG("%s rate : %d, %d, %3.2f, %3.2f", ifname.c_str(), tx_bps, rx_bps, tx_err_rate, rx_err_rate);
 					
 					if_stats[ifname] = stat;
@@ -134,9 +142,7 @@ private:
 	}
 		
 	ros::NodeHandle nh;
-	std::vector<ros::Publisher> pub_tx_rates;
-	std::vector<ros::Publisher> pub_rx_rates;
-	std::vector<sysmon_ros::netif> netifs;
+	std::map<std::string, ros::Publisher> pub_netifs;
 	std::map<std::string, Netmon::if_stat> if_stats;
 	int32_t if_cnt;	
 	std::string proc_name;
