@@ -64,6 +64,31 @@ public:
 		ros::Rate rate(hz);
 		while (ros::ok() && do_loop) {
 			ros::spinOnce();
+			
+			std::string str;
+			int32_t line(0);
+			while (Util::readSingleLine(proc_name, str, line++)) {
+				std::string ifname;
+				if_stat stat;
+				if(parse(str, ifname, stat)){
+					int32_t tx_bps(0.0);
+					int32_t rx_bps(0.0);
+					double tx_err_rate(0.0);
+					double rx_err_rate(0.0);
+					tx_bps = hz * (stat.tx_total - if_stats[ifname].tx_total) * 8;
+					rx_bps = hz * (stat.rx_total - if_stats[ifname].rx_total) * 8;
+					if(stat.tx_pack_total > if_stats[ifname].tx_pack_total){
+						tx_err_rate = (double)(stat.tx_err - if_stats[ifname].tx_err) / (double)(stat.tx_pack_total - if_stats[ifname].tx_pack_total) * 100.0;
+					}
+					if(stat.rx_pack_total > if_stats[ifname].rx_pack_total){
+						rx_err_rate = (double)(stat.rx_err - if_stats[ifname].rx_err) / (double)(stat.rx_pack_total - if_stats[ifname].rx_pack_total) * 100.0;
+					}
+					ROS_DEBUG("%s rate : %d, %d, %3.2f, %3.2f", ifname.c_str(), tx_bps, rx_bps, tx_err_rate, rx_err_rate);
+					
+					if_stats[ifname] = stat;
+				}
+			}
+			
 			rate.sleep();
 		}
 		
@@ -74,8 +99,10 @@ private:
 	struct if_stat{
 		int64_t tx_total;
 		int64_t rx_total;
+		int64_t tx_pack_total;
+		int64_t rx_pack_total;
 		int64_t tx_err;
-		int64_t rx_err;		
+		int64_t rx_err;
 	};
 	
 	bool parse(const std::string line, std::string &ifn, if_stat &stat) {
@@ -83,7 +110,7 @@ private:
 		auto last = line.end();
 
 		std::vector<int32_t> result;
-			
+		
 		if (qi::parse(
 			first, last,
 			(
@@ -94,9 +121,11 @@ private:
 			//std::cout << "Match!! " << result.size() << std::endl;
 			if (result.size() == 16) {
 				stat.rx_total = result[0];
-				stat.rx_err = result[1];
+				stat.rx_pack_total = result[1];
+				stat.rx_err = result[2];
 				stat.tx_total = result[8];
-				stat.tx_err = result[9];
+				stat.tx_pack_total = result[9];
+				stat.tx_err = result[10];
 			}
 
 			return true;
