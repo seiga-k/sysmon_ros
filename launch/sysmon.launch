@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <arg name="hz" default="1.0" />
+    
+    <group ns="sysmon">
+        <node pkg="sysmon_ros" type="cpumon" name="cpumon">
+            <param name="hz" value="$(arg hz)"/>
+        </node>
+        <node pkg="sysmon_ros" type="memmon" name="memmon">
+            <param name="hz" value="$(arg hz)"/>
+        </node>
+        <node pkg="sysmon_ros" type="netmon" name="netmon">
+            <param name="hz" value="$(arg hz)"/>
+        </node>
+        <node pkg="sysmon_ros" type="tempmon" name="tempmon">
+            <param name="hz" value="$(arg hz)"/>
+        </node>
+    </group>
+</launch>
