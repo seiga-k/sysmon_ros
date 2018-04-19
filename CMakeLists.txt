@@ -136,6 +136,7 @@ include_directories(
 add_executable(netmon src/netmon.cpp)
 add_executable(cpumon src/cpumon.cpp)
 add_executable(tempmon src/tempmon.cpp)
+add_executable(memmon src/memmon.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -148,6 +149,7 @@ add_executable(tempmon src/tempmon.cpp)
 add_dependencies(netmon ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${Boost_EXPORTED_TARGETS})
 add_dependencies(cpumon ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${Boost_EXPORTED_TARGETS})
 add_dependencies(tempmon ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${Boost_EXPORTED_TARGETS})
+add_dependencies(memmon ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${Boost_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(netmon
@@ -161,6 +163,11 @@ target_link_libraries(cpumon
     ${Boost_LIBRARIES}
 )
 target_link_libraries(tempmon
+    m
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+)
+target_link_libraries(memmon
     m
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
