@@ -67,6 +67,7 @@ public:
 			int32_t total_free;
 			
 			std::string str;
+			int comp_count(0);
 			int32_t line(0);
 			while (Util::readSingleLine(proc_name, str, line++)) {
 				if (qi::parse(
@@ -76,6 +77,7 @@ public:
 					qi::lit("MemTotal:") >> +qi::blank >> +qi::int_[bp::ref(real_total) = qi::_1] >> +qi::blank >> qi::lit("kB") 
 					)
 					)) {
+					comp_count |= 1 << 0;
 				}
 				else if (qi::parse(
 					str.cbegin(),
@@ -84,6 +86,7 @@ public:
 					qi::lit("MemAvailable:") >> +qi::blank >> +qi::int_[bp::ref(real_free) = qi::_1] >> +qi::blank >> qi::lit("kB") 
 					)
 					)) {
+					comp_count |= 1 << 1;
 				}
 				else if (qi::parse(
 					str.cbegin(),
@@ -92,6 +95,7 @@ public:
 					qi::lit("SwapTotal:") >> +qi::blank >> +qi::int_[bp::ref(swap_total) = qi::_1] >> +qi::blank >> qi::lit("kB") 
 					)
 					)) {
+					comp_count |= 1 << 2;
 				}
 				else if (qi::parse(
 					str.cbegin(),
@@ -100,7 +104,12 @@ public:
 					qi::lit("SwapFree:") >> +qi::blank >> +qi::int_[bp::ref(swap_free) = qi::_1] >> +qi::blank >> qi::lit("kB") 
 					)
 					)) {
+					comp_count |= 1 << 3;
 				}
+			}
+			if(comp_count != 0x0F){
+				ROS_WARN("meminfo : faild to parse");
+				return;
 			}
 			std_msgs::Float32 msg_real;
 			msg_real.data = (1. - (float)real_free / (float)real_total) * 100.;
