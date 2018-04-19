@@ -167,6 +167,6 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "netmon");
 	Sysmon::Netmon netmon;
 	netmon.run();
-	while (ros::ok());
+	ros::spin();
 	return 0;
 }

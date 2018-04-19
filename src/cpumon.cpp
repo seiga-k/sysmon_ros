@@ -128,6 +128,6 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "cpumon");
 	Sysmon::Cpumon cpumon;
 	cpumon.run();
-	while (ros::ok());
+	ros::spin();
 	return 0;
 }
