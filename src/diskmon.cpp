@@ -50,6 +50,16 @@ public:
 				)
 				)) {
 				std::cout << devname << " Path : " << fspath << std::endl;
+				fs::space_info si;
+				try{
+					fs::path path(fspath);
+					si = fs::space(path);
+				}
+				catch(fs::filesystem_error &ex){
+					ROS_INFO("Device can not read : %s", devname.c_str());
+					ROS_INFO("%s", ex.what());
+					continue;
+				}
 				
 				pub_set pubs;
 				pubs.pub_avalable = nh.advertise<std_msgs::Int32>(devname + "/avalable", 1);
@@ -90,7 +100,30 @@ public:
 		ros::Rate rate(hz);
 		while (ros::ok() && do_loop) {
 			ros::spinOnce();
-		fs::space_info si = fs::space("/media/frl/My Book");
+			
+			for(auto&& pubs : pub_usages){
+				fs::space_info si;
+				try{
+					si = fs::space(pubs.first);
+				}
+				catch(fs::filesystem_error &ex){
+					ROS_INFO("Device can not read : %s", ex.what());
+					continue;
+				}
+				
+				float rate = (float)si.available / (float)si.capacity * 100.;
+				std_msgs::Int32 msg_available;
+				msg_available.data = si.available;
+				pubs.second.pub_avalable.publish(msg_available);
+				
+				std_msgs::Int32 msg_capacity;
+				msg_capacity.data = si.capacity;
+				pubs.second.pub_capacity.publish(msg_capacity);
+				
+				std_msgs::Float32 msg_rate;
+				msg_rate.data = rate;
+				pubs.second.pub_freerate.publish(msg_rate);				
+			}
 			
 			rate.sleep();
 		}
