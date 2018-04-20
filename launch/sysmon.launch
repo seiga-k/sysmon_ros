@@ -15,5 +15,8 @@
         <node pkg="sysmon_ros" type="tempmon" name="tempmon">
             <param name="hz" value="$(arg hz)"/>
         </node>
+        <node pkg="sysmon_ros" type="diskmon" name="diskmon">
+            <param name="hz" value="$(arg hz)"/>
+        </node>
     </group>
 </launch>
