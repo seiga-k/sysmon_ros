@@ -57,7 +57,7 @@ public:
 					return;
 				}
 				std::string ip(host);
-				//std::cout << ifname << " IP : " << ip << std::endl;
+				ROS_INFO("Found network interface : %s [%s]", ifname.c_str(), ip.c_str());
 				auto it = ips.find(ifname);
 				if (it == ips.end()) {
 					std::vector<std::string> ip_;
@@ -78,6 +78,10 @@ public:
 
 			int family = ifa_->ifa_addr->sa_family;
 			std::string ifname(ifa_->ifa_name);
+
+			if (if_stats.count(ifname) == 0){
+				continue;
+			}
 
 			if (family == AF_PACKET && ifa_->ifa_data != NULL) {
 				rtnl_link_stats *stats = (rtnl_link_stats *) ifa_->ifa_data;
@@ -115,6 +119,10 @@ public:
 
 				int family = ifa_->ifa_addr->sa_family;
 				std::string ifname(ifa_->ifa_name);
+				
+				if (if_stats.count(ifname) == 0){
+					continue;
+				}
 
 				if (family == AF_PACKET && ifa_->ifa_data != NULL) {
 					rtnl_link_stats *stats = (rtnl_link_stats *) ifa_->ifa_data;
