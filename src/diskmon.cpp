@@ -17,6 +17,7 @@
 #include <boost/xpressive/xpressive.hpp>
 #include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "util.h"
 
@@ -34,7 +35,7 @@ public:
 	do_loop(false),
 	proc_name("/proc/mounts")
 	{
-		nh.getParam("hz", hz);		
+		nh.getParam("hz", hz);
 		
 		std::string str;
 		int32_t line(0);
@@ -47,9 +48,11 @@ public:
 				(
 				qi::as_string[qi::lit("/dev/") >> +qi::alnum][bp::ref(devname) = qi::_1] >> qi::blank
 				>> qi::as_string[+(qi::string("/") >> *(qi::char_ - (qi::lit('/') | qi::blank)))][bp::ref(fspath) = qi::_1] >> qi::blank >> *qi::char_ 
+				
 				)
 				)) {
-				std::cout << devname << " Path : " << fspath << std::endl;
+				boost::algorithm::replace_all(fspath, "\\040", " ");
+				ROS_INFO("Found device %s : mount point : %s", devname.c_str() ,fspath.c_str());
 				fs::space_info si;
 				try{
 					fs::path path(fspath);
@@ -75,9 +78,8 @@ public:
 				>> qi::lit("/") >> qi::blank >> *qi::char_ 
 				)
 				)) {
-				// for if the root fs is not a typical device
-				std::cout << "Root fs device : " << devname << std::endl;
 				
+				ROS_INFO("Found device %s : mount point : /", devname.c_str());
 				pub_set pubs;
 				pubs.pub_avalable = nh.advertise<std_msgs::Int32>(devname + "/avalable", 1);
 				pubs.pub_capacity = nh.advertise<std_msgs::Int32>(devname + "/capacity", 1);
