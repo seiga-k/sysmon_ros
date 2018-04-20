@@ -35,7 +35,7 @@ CPUNAME depends on your system.
 ### Parameters
 
 - ~hz (float32)  
-reflesh rate in Hz
+refresh rate in Hz
 
 ## memmon
 
@@ -61,7 +61,7 @@ Total (real + swap) memory usage in percent.
 ### Parameters
 
 - ~hz (float32)  
-reflesh rate in Hz
+refresh rate in Hz
 
 ## netmon
 
@@ -81,7 +81,7 @@ NICNAME depends on your system.
 ### Parameters
 
 - ~hz (float32)  
-reflesh rate in Hz
+refresh rate in Hz
 
 ## tempmon
 
@@ -102,6 +102,6 @@ If there have some sensors on the system, the node provide all of them with spec
 ### Parameters
 
 - ~hz (float32)  
-reflesh rate in Hz
+refresh rate in Hz
 
 
