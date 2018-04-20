@@ -51,7 +51,11 @@ public:
 				
 				)
 				)) {
+				boost::algorithm::replace_all(fspath, "\\\\", "\\");
+				boost::algorithm::replace_all(fspath, "\\010", "\\t");
+				boost::algorithm::replace_all(fspath, "\\012", "\\n");
 				boost::algorithm::replace_all(fspath, "\\040", " ");
+				boost::algorithm::replace_all(fspath, "\\134", "\\");
 				ROS_INFO("Found device %s : mount point : %s", devname.c_str() ,fspath.c_str());
 				fs::space_info si;
 				try{
