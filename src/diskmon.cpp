@@ -88,7 +88,7 @@ public:
 				pubs.pub_avalable = nh.advertise<std_msgs::Int32>(devname + "/avalable", 1);
 				pubs.pub_capacity = nh.advertise<std_msgs::Int32>(devname + "/capacity", 1);
 				pubs.pub_freerate = nh.advertise<std_msgs::Float32>(devname + "/freerate", 1);
-				pub_usages.insert(std::make_pair(fspath, pubs));
+				pub_usages.insert(std::make_pair("/", pubs));
 			}
 		}
 		
