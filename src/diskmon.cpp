@@ -2,6 +2,7 @@
 #include <ros/console.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float32.h>
+#include <sysmon_ros/diskinfo.h>
 
 #include <iostream>
 #include <fstream>
@@ -68,11 +69,11 @@ public:
 					continue;
 				}
 				
-				pub_set pubs;
-				pubs.pub_avalable = nh.advertise<std_msgs::Int32>(devname + "/avalable", 1);
-				pubs.pub_capacity = nh.advertise<std_msgs::Int32>(devname + "/capacity", 1);
-				pubs.pub_freerate = nh.advertise<std_msgs::Float32>(devname + "/freerate", 1);
-				pub_usages.insert(std::make_pair(fspath, pubs));
+				disk_info di;
+				di.name = "/dev/" + devname;
+				di.mount_point = fspath;
+				di.pub = nh.advertise<sysmon_ros::diskinfo>(devname, 1);
+				disk_infos.insert(std::make_pair(devname, di));
 			}
 			else if (qi::parse(
 				str.cbegin(),
@@ -84,14 +85,13 @@ public:
 				)) {
 				
 				ROS_INFO("Found device %s : mount point : /", devname.c_str());
-				pub_set pubs;
-				pubs.pub_avalable = nh.advertise<std_msgs::Int32>(devname + "/avalable", 1);
-				pubs.pub_capacity = nh.advertise<std_msgs::Int32>(devname + "/capacity", 1);
-				pubs.pub_freerate = nh.advertise<std_msgs::Float32>(devname + "/freerate", 1);
-				pub_usages.insert(std::make_pair("/", pubs));
+				disk_info di;
+				di.name = devname;
+				di.mount_point = "/";
+				di.pub = nh.advertise<sysmon_ros::diskinfo>(devname, 1);
+				disk_infos.insert(std::make_pair(devname, di));
 			}
 		}
-		
 
 		do_loop = true;
 		ROS_INFO("Start diskmon node");
@@ -107,10 +107,10 @@ public:
 		while (ros::ok() && do_loop) {
 			ros::spinOnce();
 			
-			for(auto&& pubs : pub_usages){
+			for(auto&& di : disk_infos){
 				fs::space_info si;
 				try{
-					si = fs::space(pubs.first);
+					si = fs::space(di.second.mount_point);
 				}
 				catch(fs::filesystem_error &ex){
 					ROS_INFO("Device can not read : %s", ex.what());
@@ -118,17 +118,13 @@ public:
 				}
 				
 				float rate = (float)si.available / (float)si.capacity * 100.;
-				std_msgs::Int32 msg_available;
-				msg_available.data = si.available;
-				pubs.second.pub_avalable.publish(msg_available);
-				
-				std_msgs::Int32 msg_capacity;
-				msg_capacity.data = si.capacity;
-				pubs.second.pub_capacity.publish(msg_capacity);
-				
-				std_msgs::Float32 msg_rate;
-				msg_rate.data = rate;
-				pubs.second.pub_freerate.publish(msg_rate);				
+				sysmon_ros::diskinfo di_msg;
+				di_msg.name = di.second.name;
+				di_msg.mount_point = di.second.mount_point;
+				di_msg.avalable = si.available;
+				di_msg.capacity = si.capacity;
+				di_msg.free_rate = rate;
+				di.second.pub.publish(di_msg);
 			}
 			
 			rate.sleep();
@@ -136,14 +132,14 @@ public:
 	}
 
 private:
-	struct pub_set{
-		ros::Publisher pub_capacity;
-		ros::Publisher pub_avalable;
-		ros::Publisher pub_freerate;
+	struct disk_info{
+		std::string name;
+		std::string mount_point;
+		ros::Publisher pub;
 	};
 	
 	ros::NodeHandle nh;
-	std::map<std::string, pub_set> pub_usages;
+	std::map<std::string, disk_info> disk_infos;
 	double hz;
 	bool do_loop;
 	const std::string proc_name;

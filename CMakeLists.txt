@@ -50,6 +50,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 add_message_files(
     FILES
     netif.msg
+    diskinfo.msg
 )
 
 ## Generate services in the 'srv' folder
