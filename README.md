@@ -4,6 +4,18 @@ sysmon_ros is for monitoring a system status on ROS environment.
 
 # Message
 
+## diskinfo
+
+```
+string name                     //Device or partition name
+string mount_point              //Mount point
+int64 capacity                  //Storage capacity in bytes
+int64 available                 //Storage availability in bytes
+float32 free_rate               //Storage free rate in percent
+float32 write_bps               //Writing speed in byte per second
+float32 read_bps                //Reading speed in byte per second
+```
+
 ## netif
 
 ```
@@ -31,6 +43,26 @@ The value is read from ```/proc/stat```.
 
 - ```cpumon/CPUNAME``` (std_msgs/Float32)  
 CPUNAME depends on your system.
+
+### Parameters
+
+- ~hz (float32)  
+refresh rate in Hz
+
+## diskmon
+
+Storage monitor node.
+This node measure a storage usages.
+The value is read from ```/proc/diskinfo``` and ```/proc/mounts```.
+
+### Subscribed Topics
+
+- None
+
+### Published Topics
+
+- ```diskmon/PARTNAME``` (sysmon_ros/diskinfo)  
+PARTNAME depends on your system.
 
 ### Parameters
 
