@@ -150,7 +150,7 @@ public:
 				sysmon_ros::diskinfo di_msg;
 				di_msg.name = di.second.name;
 				di_msg.mount_point = di.second.mount_point;
-				di_msg.avalable = si.available;
+				di_msg.available = si.available;
 				di_msg.capacity = si.capacity;
 				di_msg.free_rate = rate;
 				di_msg.read_bps = (float)(read_blk - di.second.read_prev) * 512. / diff_sec;
