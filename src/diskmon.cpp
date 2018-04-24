@@ -34,13 +34,14 @@ public:
 	nh("~"),
 	hz(1.0),
 	do_loop(false),
-	proc_name("/proc/mounts")
+	proc_name_mount("/proc/mounts"),
+	proc_name_stat("/proc/diskstats")
 	{
 		nh.getParam("hz", hz);
 		
 		std::string str;
 		int32_t line(0);
-		while (Util::readSingleLine(proc_name, str, line++)) {
+		while (Util::readSingleLine(proc_name_mount, str, line++)) {
 			std::string fspath;
 			std::string devname;
 			if (qi::parse(
@@ -68,11 +69,12 @@ public:
 					ROS_INFO("%s", ex.what());
 					continue;
 				}
-				
+
 				disk_info di;
 				di.name = "/dev/" + devname;
 				di.mount_point = fspath;
 				di.pub = nh.advertise<sysmon_ros::diskinfo>(devname, 1);
+				di.blocksize = 512;
 				disk_infos.insert(std::make_pair(devname, di));
 			}
 			else if (qi::parse(
@@ -103,18 +105,45 @@ public:
 
 	void run()
 	{
+		ros::Time last_time = ros::Time::now();
 		ros::Rate rate(hz);
 		while (ros::ok() && do_loop) {
 			ros::spinOnce();
+
+			ros::Time cur_time = ros::Time::now();
+			ros::Duration diff = cur_time - last_time;
+			double diff_sec = diff.toSec();
 			
 			for(auto&& di : disk_infos){
 				fs::space_info si;
+				int64_t read_blk;
+				int64_t wrote_blk;
 				try{
 					si = fs::space(di.second.mount_point);
 				}
 				catch(fs::filesystem_error &ex){
 					ROS_INFO("Device can not read : %s", ex.what());
 					continue;
+				}
+				
+				std::string str;
+				int32_t line(0);
+				while (Util::readSingleLine(proc_name_stat, str, line++)) {
+					std::vector<int64_t> results;
+					if (qi::parse(
+						str.cbegin(),
+						str.cend(),
+						(
+						+(*qi::blank >> qi::int_) >> +qi::blank >> qi::lit(di.first) >> 
+						+(+qi::blank >> qi::int_[bp::push_back(bp::ref(results), qi::_1)])
+						)
+						)) {
+						if(results.size() == 11){
+							read_blk = results[2];
+							wrote_blk = results[6];
+						}
+
+					}
 				}
 				
 				float rate = (float)si.available / (float)si.capacity * 100.;
@@ -124,8 +153,14 @@ public:
 				di_msg.avalable = si.available;
 				di_msg.capacity = si.capacity;
 				di_msg.free_rate = rate;
+				di_msg.read_bps = (float)(read_blk - di.second.read_prev) * 512. / diff_sec;
+				di_msg.write_bps = (float)(wrote_blk - di.second.write_prev) * 512. / diff_sec;
 				di.second.pub.publish(di_msg);
+				
+				di.second.read_prev = read_blk;
+				di.second.write_prev = wrote_blk;
 			}
+			last_time = cur_time;
 			
 			rate.sleep();
 		}
@@ -135,6 +170,9 @@ private:
 	struct disk_info{
 		std::string name;
 		std::string mount_point;
+		int64_t blocksize;
+		int64_t write_prev;
+		int64_t read_prev;
 		ros::Publisher pub;
 	};
 	
@@ -142,7 +180,8 @@ private:
 	std::map<std::string, disk_info> disk_infos;
 	double hz;
 	bool do_loop;
-	const std::string proc_name;
+	const std::string proc_name_mount;
+	const std::string proc_name_stat;
 };
 }
 
