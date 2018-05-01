@@ -18,8 +18,6 @@
 #include <boost/xpressive/xpressive.hpp>
 #include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <boost/algorithm/string.hpp>
-
 #include "util.h"
 
 namespace fs = boost::filesystem;
