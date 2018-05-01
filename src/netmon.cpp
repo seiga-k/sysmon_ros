@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <numeric>
+#include <regex>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -31,7 +32,7 @@ public:
 		if (getifaddrs(&ifaddr) == -1) {
 			return;
 		}
-
+		
 		nh.getParam("hz", hz);
 
 		ifaddrs *ifa_;
@@ -63,7 +64,7 @@ public:
 					std::vector<std::string> ip_;
 					ip_.push_back(ip);
 					ips.insert(std::make_pair(ifname, ip_));
-					pub_netifs.insert(std::make_pair(ifname, nh.advertise<sysmon_ros::netif>(ifname, 1)));
+					pub_netifs.insert(std::make_pair(ifname, nh.advertise<sysmon_ros::netif>(std::regex_replace(ifname, std::regex(R"(\W)"), "_"), 1)));
 					rtnl_link_stats st_tmp;
 					if_stats.insert(std::make_pair(ifname, st_tmp));
 				} else {

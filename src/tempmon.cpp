@@ -15,6 +15,7 @@
 #include <vector>
 #include <map>
 #include <numeric>
+#include <regex>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -82,9 +83,8 @@ public:
 						if(fs::exists(label_path)){
 							std::string label;
 							Util::readSingleLine(label_path.generic_string(), label);
-							dev_name += "/" + label;
+							dev_name += "/" + std::regex_replace(label, std::regex(R"(\W)"), "_");
 						}
-						std::replace(dev_name.begin(), dev_name.end(), ' ', '_');
 						//std::cout << "input path : " << p.path() << std::endl;
 						dev.temp_file = p.path();
 						dev.pub_temp = nh.advertise<std_msgs::Float32>(dev_name, 1);
