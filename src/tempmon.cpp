@@ -48,10 +48,10 @@ public:
 				ROS_ERROR("No hwmon directory");
 				return;
 			}
-			
+
 			for(auto&& hwmons : fs::directory_iterator(hwmon_root)){
 				//std::cout << "Path " << hwmons.path() << std::endl;
-				
+
 				std::string name;
 				fs::path dev_name_path(hwmons.path() / "name");
 				if(fs::exists(dev_name_path)){
@@ -61,23 +61,23 @@ public:
 					ROS_ERROR("Unknown style device. tempmon need name of hwmon device.");
 					return;
 				}
-				
+
 				std::string label_fname;
-				
+
 				for(auto&& p : fs::directory_iterator(hwmons.path())){
 					std::string input_fname(p.path().filename().generic_string());
 					int input_num;
 					std::string dev_name(name);
 					temp_dev dev;
-					
+
 					if (qi::parse(
 						input_fname.cbegin(),
 						input_fname.cend(),
 						(
-						qi::lit("temp") >> +qi::int_[bp::ref(input_num) = qi::_1] >> qi::lit("_input") 
+						qi::lit("temp") >> +qi::int_[bp::ref(input_num) = qi::_1] >> qi::lit("_input")
 						)
 						)) {
-						
+
 						label_fname = "temp" + std::to_string(input_num) + "_label";
 						fs::path label_path(hwmons.path() / label_fname);
 						if(fs::exists(label_path)){
@@ -109,13 +109,13 @@ public:
 		ros::Rate rate(hz);
 		while (ros::ok() && do_loop) {
 			ros::spinOnce();
-			
+
 			for(auto&& dev : temps){
 				std_msgs::Float32 msg;
 				read_temp(dev, msg);
 				dev.pub_temp.publish(msg);
 			}
-			
+
 			rate.sleep();
 		}
 
@@ -126,7 +126,7 @@ private:
 		ros::Publisher pub_temp;
 		fs::path temp_file;
 	};
-	
+
 	void read_temp(const temp_dev &p_dev, std_msgs::Float32 &msg){
 		std::string temp_str;
 		Util::readSingleLine(p_dev.temp_file.generic_string(), temp_str);
@@ -137,10 +137,10 @@ private:
 			ROS_WARN("lexical_cast error : %s", temp_str.c_str());
 			return;
 		}
-		
+
 		msg.data = temp;
 	}
-	
+
 	ros::NodeHandle nh;
 	std::vector<temp_dev> temps;
 	double hz;

@@ -13,7 +13,7 @@
 namespace Sysmon{
 
 class Util{
-public:	    
+public:
     static bool readSingleLine(const std::string fname, std::string& outstr, const int32_t line=0) {
         std::ifstream ifs;
         std::string str;
@@ -29,7 +29,6 @@ public:
                 std::getline(ifs, str);
                 if (ifs.fail()) {
                         // End of file
-                        //ROS_INFO("End of file");
                         return false;
                 }
         }

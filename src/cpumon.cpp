@@ -50,7 +50,7 @@ public:
 			do_loop = false;
 			ROS_INFO("CPU Usage report is disabled.");
 		}
-		
+
 		ROS_INFO("Start cpumon node");
 	}
 
@@ -63,7 +63,7 @@ public:
 		ros::Rate rate(hz);
 		while (ros::ok() && do_loop) {
 			ros::spinOnce();
-			
+
 			std::string str;
 			int32_t line(0);
 			while (Util::readSingleLine(proc_name, str, line++)) {
@@ -77,12 +77,12 @@ public:
 					totals_prev[name] = total;
 				}
 			}
-			
+
 			rate.sleep();
 		}
 	}
 
-private:	
+private:
 	bool parse(const std::string line, int32_t &total, int32_t &worker, std::string &cpu_name) {
 		namespace qi = boost::spirit::qi;
 		namespace bp = boost::phoenix;
@@ -111,7 +111,7 @@ private:
 		}
 		return false;
 	}
-	
+
 	ros::NodeHandle nh;
 	std::map<std::string, ros::Publisher> pub_usages;
 	std::map<std::string, int32_t> totals_prev;

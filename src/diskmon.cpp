@@ -36,7 +36,7 @@ public:
 	proc_name_stat("/proc/diskstats")
 	{
 		nh.getParam("hz", hz);
-		
+
 		std::string str;
 		int32_t line(0);
 		while (Util::readSingleLine(proc_name_mount, str, line++)) {
@@ -47,8 +47,8 @@ public:
 				str.cend(),
 				(
 				qi::as_string[qi::lit("/dev/") >> +qi::alnum][bp::ref(devname) = qi::_1] >> qi::blank
-				>> qi::as_string[+(qi::string("/") >> *(qi::char_ - (qi::lit('/') | qi::blank)))][bp::ref(fspath) = qi::_1] >> qi::blank >> *qi::char_ 
-				
+				>> qi::as_string[+(qi::string("/") >> *(qi::char_ - (qi::lit('/') | qi::blank)))][bp::ref(fspath) = qi::_1] >> qi::blank >> *qi::char_
+
 				)
 				)) {
 				boost::algorithm::replace_all(fspath, "\\\\", "\\");
@@ -80,10 +80,10 @@ public:
 				str.cend(),
 				(
 				qi::as_string[+(qi::char_ - qi::blank)][bp::ref(devname) = qi::_1] >> qi::blank
-				>> qi::lit("/") >> qi::blank >> *qi::char_ 
+				>> qi::lit("/") >> qi::blank >> *qi::char_
 				)
 				)) {
-				
+
 				ROS_INFO("Found device %s : mount point : /", devname.c_str());
 				disk_info di;
 				di.name = devname;
@@ -111,7 +111,7 @@ public:
 			ros::Time cur_time = ros::Time::now();
 			ros::Duration diff = cur_time - last_time;
 			double diff_sec = diff.toSec();
-			
+
 			for(auto&& di : disk_infos){
 				fs::space_info si;
 				int64_t read_blk;
@@ -123,7 +123,7 @@ public:
 					ROS_INFO("Device can not read : %s", ex.what());
 					continue;
 				}
-				
+
 				std::string str;
 				int32_t line(0);
 				while (Util::readSingleLine(proc_name_stat, str, line++)) {
@@ -132,7 +132,7 @@ public:
 						str.cbegin(),
 						str.cend(),
 						(
-						+(*qi::blank >> qi::int_) >> +qi::blank >> qi::lit(di.first) >> 
+						+(*qi::blank >> qi::int_) >> +qi::blank >> qi::lit(di.first) >>
 						+(+qi::blank >> qi::int_[bp::push_back(bp::ref(results), qi::_1)])
 						)
 						)) {
@@ -143,7 +143,7 @@ public:
 
 					}
 				}
-				
+
 				float rate = (float)si.available / (float)si.capacity * 100.;
 				sysmon_ros::diskinfo di_msg;
 				di_msg.name = di.second.name;
@@ -154,12 +154,12 @@ public:
 				di_msg.read_bps = (float)(read_blk - di.second.read_prev) * 512. / diff_sec;
 				di_msg.write_bps = (float)(wrote_blk - di.second.write_prev) * 512. / diff_sec;
 				di.second.pub.publish(di_msg);
-				
+
 				di.second.read_prev = read_blk;
 				di.second.write_prev = wrote_blk;
 			}
 			last_time = cur_time;
-			
+
 			rate.sleep();
 		}
 	}
@@ -173,7 +173,7 @@ private:
 		int64_t read_prev;
 		ros::Publisher pub;
 	};
-	
+
 	ros::NodeHandle nh;
 	std::map<std::string, disk_info> disk_infos;
 	double hz;
