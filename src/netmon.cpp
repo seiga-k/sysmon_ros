@@ -32,7 +32,7 @@ public:
 		if (getifaddrs(&ifaddr) == -1) {
 			return;
 		}
-		
+
 		nh.getParam("hz", hz);
 
 		ifaddrs *ifa_;
@@ -120,7 +120,7 @@ public:
 
 				int family = ifa_->ifa_addr->sa_family;
 				std::string ifname(ifa_->ifa_name);
-				
+
 				if (if_stats.count(ifname) == 0){
 					continue;
 				}

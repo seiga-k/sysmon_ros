@@ -58,14 +58,14 @@ public:
 		ros::Rate rate(hz);
 		while (ros::ok() && do_loop) {
 			ros::spinOnce();
-			
+
 			int32_t real_total;
 			int32_t real_free;
 			int32_t swap_total;
 			int32_t swap_free;
 			int32_t total;
 			int32_t total_free;
-			
+
 			std::string str;
 			int comp_count(0);
 			int32_t line(0);
@@ -74,7 +74,7 @@ public:
 					str.cbegin(),
 					str.cend(),
 					(
-					qi::lit("MemTotal:") >> +qi::blank >> +qi::int_[bp::ref(real_total) = qi::_1] >> +qi::blank >> qi::lit("kB") 
+					qi::lit("MemTotal:") >> +qi::blank >> +qi::int_[bp::ref(real_total) = qi::_1] >> +qi::blank >> qi::lit("kB")
 					)
 					)) {
 					comp_count |= 1 << 0;
@@ -83,7 +83,7 @@ public:
 					str.cbegin(),
 					str.cend(),
 					(
-					qi::lit("MemAvailable:") >> +qi::blank >> +qi::int_[bp::ref(real_free) = qi::_1] >> +qi::blank >> qi::lit("kB") 
+					qi::lit("MemAvailable:") >> +qi::blank >> +qi::int_[bp::ref(real_free) = qi::_1] >> +qi::blank >> qi::lit("kB")
 					)
 					)) {
 					comp_count |= 1 << 1;
@@ -92,7 +92,7 @@ public:
 					str.cbegin(),
 					str.cend(),
 					(
-					qi::lit("SwapTotal:") >> +qi::blank >> +qi::int_[bp::ref(swap_total) = qi::_1] >> +qi::blank >> qi::lit("kB") 
+					qi::lit("SwapTotal:") >> +qi::blank >> +qi::int_[bp::ref(swap_total) = qi::_1] >> +qi::blank >> qi::lit("kB")
 					)
 					)) {
 					comp_count |= 1 << 2;
@@ -101,7 +101,7 @@ public:
 					str.cbegin(),
 					str.cend(),
 					(
-					qi::lit("SwapFree:") >> +qi::blank >> +qi::int_[bp::ref(swap_free) = qi::_1] >> +qi::blank >> qi::lit("kB") 
+					qi::lit("SwapFree:") >> +qi::blank >> +qi::int_[bp::ref(swap_free) = qi::_1] >> +qi::blank >> qi::lit("kB")
 					)
 					)) {
 					comp_count |= 1 << 3;
@@ -117,11 +117,11 @@ public:
 			msg_swap.data = (1. - (float)swap_free / (float)swap_total) * 100.;
 			std_msgs::Float32 msg_total;
 			msg_total.data = (1. - (float)(real_free + swap_free) / (float)(real_total + swap_total)) * 100.;
-			
+
 			pub_real_usage.publish(msg_real);
 			pub_swap_usage.publish(msg_swap);
 			pub_total_usage.publish(msg_total);
-			
+
 			rate.sleep();
 		}
 	}
