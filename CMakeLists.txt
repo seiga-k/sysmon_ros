@@ -9,6 +9,7 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
     roscpp
+    roslint
     std_msgs
     message_generation
 )
@@ -103,9 +104,9 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES sysmon_ros
-    CATKIN_DEPENDS roscpp std_msgs message_runtime
+  CATKIN_DEPENDS roscpp roslint std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -116,7 +117,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )
@@ -180,6 +181,9 @@ target_link_libraries(diskmon
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
 )
+
+set(ROSLINT_CPP_OPTS "--filter=+,-build/c++11")
+roslint_cpp()
 
 #############
 ## Install ##

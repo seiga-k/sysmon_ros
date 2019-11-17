@@ -1,4 +1,9 @@
 /*
+ * Copyright(c) 2019, seiga-k
+ * All rights reserved.
+ */
+
+/*
  * アイディアメモ
  * /sys/class/hwmon/hwmon* /name にセンサの名前が入ってる
  * /sys/class/hwmon/hwmon* /temp?_input に温度が入ってる
@@ -25,136 +30,147 @@
 #include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-#include "util.h"
+#include "sysmon_ros/util.h"
 
 namespace fs = boost::filesystem;
 namespace qi = boost::spirit::qi;
 namespace bp = boost::phoenix;
 
-namespace Sysmon {
+namespace Sysmon
+{
 
-class Tempmon {
+class Tempmon
+{
 public:
+    Tempmon() :
+    nh("~"),
+    hz(1.0),
+    do_loop(false),
+    hwmon_root("/sys/class/hwmon/"),
+    hwmon_num(0)
+    {
+        try
+        {
+            if (!fs::exists(hwmon_root))
+            {
+                ROS_ERROR("No hwmon directory");
+                return;
+            }
 
-	Tempmon() :
-	nh("~"),
-	hz(1.0),
-	do_loop(false),
-	hwmon_root("/sys/class/hwmon/"),
-	hwmon_num(0)
-	{
-		try{
-			if(!fs::exists(hwmon_root)){
-				ROS_ERROR("No hwmon directory");
-				return;
-			}
+            for (auto&& hwmons : fs::directory_iterator(hwmon_root))
+            {
+                std::string name;
+                fs::path dev_name_path(hwmons.path() / "name");
+                if (fs::exists(dev_name_path))
+                {
+                    Util::readSingleLine(dev_name_path.generic_string(), &name);
+                }
+                else
+                {
+                    ROS_ERROR("Unknown style device. tempmon need name of hwmon device.");
+                    return;
+                }
 
-			for(auto&& hwmons : fs::directory_iterator(hwmon_root)){
-				//std::cout << "Path " << hwmons.path() << std::endl;
+                std::string label_fname;
 
-				std::string name;
-				fs::path dev_name_path(hwmons.path() / "name");
-				if(fs::exists(dev_name_path)){
-					Util::readSingleLine(dev_name_path.generic_string(), name);
-					//std::cout << "Name : " << name << std::endl;
-				}else{
-					ROS_ERROR("Unknown style device. tempmon need name of hwmon device.");
-					return;
-				}
+                for (auto&& p : fs::directory_iterator(hwmons.path()))
+                {
+                    std::string input_fname(p.path().filename().generic_string());
+                    int input_num;
+                    std::string dev_name(name);
+                    temp_dev dev;
 
-				std::string label_fname;
+                    if (qi::parse(
+                        input_fname.cbegin(),
+                        input_fname.cend(),
+                        (
+                        qi::lit("temp") >> +qi::int_[bp::ref(input_num) = qi::_1] >> qi::lit("_input")
+                        ))) // NOLINT
+                    {
+                        label_fname = "temp" + std::to_string(input_num) + "_label";
+                        fs::path label_path(hwmons.path() / label_fname);
+                        if (fs::exists(label_path))
+                        {
+                            std::string label;
+                            Util::readSingleLine(label_path.generic_string(), &label);
+                            dev_name += "/" + std::regex_replace(label, std::regex(R"(\W)"), "_");
+                        }
+                        dev.temp_file = p.path();
+                        dev.pub_temp = nh.advertise<std_msgs::Float32>(dev_name, 1);
+                        temps.push_back(dev);
+                    }
+                }
+            }
+        }
+        catch (const fs::filesystem_error &ex)
+        {
+            ROS_ERROR("boost::filesystem got error");
+        }
+        do_loop = true;
+        ROS_INFO("Start tempmon node");
+    }
 
-				for(auto&& p : fs::directory_iterator(hwmons.path())){
-					std::string input_fname(p.path().filename().generic_string());
-					int input_num;
-					std::string dev_name(name);
-					temp_dev dev;
+    ~Tempmon()
+    {
+    }
 
-					if (qi::parse(
-						input_fname.cbegin(),
-						input_fname.cend(),
-						(
-						qi::lit("temp") >> +qi::int_[bp::ref(input_num) = qi::_1] >> qi::lit("_input")
-						)
-						)) {
+    void run()
+    {
+        ros::Rate rate(hz);
+        while (ros::ok() && do_loop)
+        {
+            ros::spinOnce();
 
-						label_fname = "temp" + std::to_string(input_num) + "_label";
-						fs::path label_path(hwmons.path() / label_fname);
-						if(fs::exists(label_path)){
-							std::string label;
-							Util::readSingleLine(label_path.generic_string(), label);
-							dev_name += "/" + std::regex_replace(label, std::regex(R"(\W)"), "_");
-						}
-						//std::cout << "input path : " << p.path() << std::endl;
-						dev.temp_file = p.path();
-						dev.pub_temp = nh.advertise<std_msgs::Float32>(dev_name, 1);
-						temps.push_back(dev);
-					}
-				}
-			}
-		}
-		catch(const fs::filesystem_error &ex){
-			ROS_ERROR("boost::filesystem got error");
-		}
-		do_loop = true;
-		ROS_INFO("Start tempmon node");
-	}
+            for (auto&& dev : temps)
+            {
+                std_msgs::Float32 msg;
+                read_temp(dev, &msg);
+                dev.pub_temp.publish(msg);
+            }
 
-	~Tempmon()
-	{
-	}
-
-	void run()
-	{
-		ros::Rate rate(hz);
-		while (ros::ok() && do_loop) {
-			ros::spinOnce();
-
-			for(auto&& dev : temps){
-				std_msgs::Float32 msg;
-				read_temp(dev, msg);
-				dev.pub_temp.publish(msg);
-			}
-
-			rate.sleep();
-		}
-
-	}
+            rate.sleep();
+        }
+    }
 
 private:
-	struct temp_dev{
-		ros::Publisher pub_temp;
-		fs::path temp_file;
-	};
+    struct temp_dev
+    {
+        ros::Publisher pub_temp;
+        fs::path temp_file;
+    };
 
-	void read_temp(const temp_dev &p_dev, std_msgs::Float32 &msg){
-		std::string temp_str;
-		Util::readSingleLine(p_dev.temp_file.generic_string(), temp_str);
-		float temp;
-		try {
-			temp = boost::lexical_cast<double>(temp_str) / 1000.0;
-		} catch (const boost::bad_lexical_cast& e) {
-			ROS_WARN("lexical_cast error : %s", temp_str.c_str());
-			return;
-		}
+    void read_temp(const temp_dev &p_dev, std_msgs::Float32 *msg)
+    {
+        std::string temp_str;
+        Util::readSingleLine(p_dev.temp_file.generic_string(), &temp_str);
+        float temp;
+        try
+        {
+            temp = boost::lexical_cast<double>(temp_str) / 1000.0;
+        }
+        catch (const boost::bad_lexical_cast& e)
+        {
+            ROS_WARN("lexical_cast error : %s", temp_str.c_str());
+            return;
+        }
 
-		msg.data = temp;
-	}
+        msg->data = temp;
+    }
 
-	ros::NodeHandle nh;
-	std::vector<temp_dev> temps;
-	double hz;
-	bool do_loop;
-	fs::path hwmon_root;
-	int hwmon_num;
+    ros::NodeHandle nh;
+    std::vector<temp_dev> temps;
+    double hz;
+    bool do_loop;
+    fs::path hwmon_root;
+    int hwmon_num;
 };
-}
+}   // namespace Sysmon
 
 int main(int argc, char** argv)
 {
-	ros::init(argc, argv, "tempmon");
-	Sysmon::Tempmon tempmon;
-	tempmon.run();
-	ros::spin();
-	return 0;
+    ros::init(argc, argv, "tempmon");
+    Sysmon::Tempmon tempmon;
+    tempmon.run();
+    ros::spin();
+    return 0;
 }
