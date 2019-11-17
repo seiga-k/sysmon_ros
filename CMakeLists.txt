@@ -182,6 +182,7 @@ target_link_libraries(diskmon
     ${Boost_LIBRARIES}
 )
 
+set(ROSLINT_CPP_OPTS "--filter=+,-build/c++11")
 roslint_cpp()
 
 #############
