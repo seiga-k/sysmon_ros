@@ -1,2 +1,7 @@
 queries:
   - include: "*"
+extraction:
+  cpp:
+     prepare:
+        packages:
+          - ros-kinetic-roslint
