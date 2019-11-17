@@ -124,7 +124,7 @@ public:
             ros::Duration diff = cur_time - last_time;
             double diff_sec = diff.toSec();
 
-            for (auto&& di : disk_infos) // NOLINT
+            for (auto&& di : disk_infos)
             {
                 fs::space_info si;
                 int64_t read_blk;
