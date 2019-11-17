@@ -25,7 +25,7 @@
 #include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-#include "./util.h"
+#include "sysmon_ros/util.h"
 
 namespace Sysmon
 {

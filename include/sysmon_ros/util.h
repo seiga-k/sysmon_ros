@@ -1,5 +1,10 @@
-#ifndef SYSMON_UTIL_H
-#define SYSMON_UTIL_H
+/*
+ * Copyright(c) 2019, seiga-k
+ * All rights reserved.
+ */
+
+#ifndef SYSMON_ROS_UTIL_H
+#define SYSMON_ROS_UTIL_H
 
 #include <ros/ros.h>
 #include <ros/console.h>
@@ -41,5 +46,4 @@ public:
 
 }
 
-#endif /* SYSMON_UTIL_H */
-
+#endif  // SYSMON_ROS_UTIL_H

@@ -21,7 +21,7 @@
 #include <ifaddrs.h>
 #include <linux/if_link.h>
 
-#include "./util.h"
+#include "sysmon_ros/util.h"
 
 namespace Sysmon
 {
