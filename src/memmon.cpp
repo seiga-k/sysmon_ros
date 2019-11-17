@@ -79,7 +79,7 @@ public:
             std::string str;
             int comp_count(0);
             int32_t line(0);
-            while (Util::readSingleLine(proc_name, str, line++))
+            while (Util::readSingleLine(proc_name, &str, line++))
             {
                 if (qi::parse(
                     str.cbegin(),

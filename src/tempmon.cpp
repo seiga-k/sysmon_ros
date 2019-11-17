@@ -63,7 +63,7 @@ public:
                 fs::path dev_name_path(hwmons.path() / "name");
                 if (fs::exists(dev_name_path))
                 {
-                    Util::readSingleLine(dev_name_path.generic_string(), name);
+                    Util::readSingleLine(dev_name_path.generic_string(), &name);
                 }
                 else
                 {
@@ -92,7 +92,7 @@ public:
                         if (fs::exists(label_path))
                         {
                             std::string label;
-                            Util::readSingleLine(label_path.generic_string(), label);
+                            Util::readSingleLine(label_path.generic_string(), &label);
                             dev_name += "/" + std::regex_replace(label, std::regex(R"(\W)"), "_");
                         }
                         dev.temp_file = p.path();
@@ -142,7 +142,7 @@ private:
     void read_temp(const temp_dev &p_dev, std_msgs::Float32 *msg)
     {
         std::string temp_str;
-        Util::readSingleLine(p_dev.temp_file.generic_string(), temp_str);
+        Util::readSingleLine(p_dev.temp_file.generic_string(), &temp_str);
         float temp;
         try
         {

@@ -47,7 +47,7 @@ public:
 
         std::string str;
         int32_t line(0);
-        while (Util::readSingleLine(proc_name_mount, str, line++))
+        while (Util::readSingleLine(proc_name_mount, &str, line++))
         {
             std::string fspath;
             std::string devname;
@@ -142,7 +142,7 @@ public:
 
                 std::string str;
                 int32_t line(0);
-                while (Util::readSingleLine(proc_name_stat, str, line++))
+                while (Util::readSingleLine(proc_name_stat, &str, line++))
                 {
                     std::vector<int64_t> results;
                     if (qi::parse(

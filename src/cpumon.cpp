@@ -42,7 +42,7 @@ public:
             do_loop = true;
             std::string str;
             int32_t line(0);
-            while (Util::readSingleLine(proc_name, str, line++))
+            while (Util::readSingleLine(proc_name, &str, line++))
             {
                 int32_t total, worker;
                 std::string name;
@@ -78,7 +78,7 @@ public:
 
             std::string str;
             int32_t line(0);
-            while (Util::readSingleLine(proc_name, str, line++))
+            while (Util::readSingleLine(proc_name, &str, line++))
             {
                 int32_t total, worker;
                 std::string name;

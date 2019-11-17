@@ -15,35 +15,41 @@
 #include <vector>
 #include <numeric>
 
-namespace Sysmon{
+namespace Sysmon
+{
 
-class Util{
+class Util
+{
 public:
-    static bool readSingleLine(const std::string fname, std::string& outstr, const int32_t line=0) {
+    static bool readSingleLine(const std::string fname, std::string *outstr, const int32_t line = 0)
+    {
         std::ifstream ifs;
         std::string str;
         int32_t cnt(line + 1);
 
         ifs.open(fname.c_str());
-        if (ifs.fail()) {
-                ROS_INFO("Could not open a file");
-                return false;
+        if (ifs.fail())
+        {
+            ROS_INFO("Could not open a file");
+            return false;
         }
-        while (cnt--) {
-                str.clear();
-                std::getline(ifs, str);
-                if (ifs.fail()) {
-                        // End of file
-                        return false;
-                }
+        while (cnt--)
+        {
+            str.clear();
+            std::getline(ifs, str);
+            if (ifs.fail())
+            {
+                // End of file
+                return false;
+            }
         }
         ifs.close();
 
-        outstr = str;
+        *outstr = str;
         return true;
     }
 };
 
-}
+}   // namespace Sysmon
 
 #endif  // SYSMON_ROS_UTIL_H
