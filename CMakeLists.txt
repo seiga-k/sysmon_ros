@@ -9,7 +9,6 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
     roscpp
-    roslint
     std_msgs
     message_generation
 )
@@ -106,7 +105,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES sysmon_ros
-  CATKIN_DEPENDS roscpp roslint std_msgs message_runtime
+  CATKIN_DEPENDS roscpp std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -182,6 +181,7 @@ target_link_libraries(diskmon
     ${Boost_LIBRARIES}
 )
 
+find_package(roslint REQUIRED)
 set(ROSLINT_CPP_OPTS "--filter=+,-build/c++11")
 roslint_cpp()
 
